@@ -17,6 +17,19 @@
 
 
 
+<pre class="r"><code>confv2$overall[1]</code></pre>
+<pre><code>##  Accuracy 
+## 0.9942226</code></pre>
+<p>As can be seen, the model based on the random forest algorithm almost reaches 100 % prediction accuracy on the validation set, which is quite an impressive result. The estimated out of sample error follows to be 0.006 and may result from corrlations between the variables, that cannot be removed by the algorithm.</p>
+<p>While you may have a hard time finding a more accurate model than this one, the biggest drawback is its relatively long calculation time it takes.</p>
+</div>
+</div>
+<div id="predicting-on-the-data-set" class="section level1">
+<h1>Predicting on the data set</h1>
+<p>After having tried different algorithms to predict the classe variable, i.e. the type of work out performed, we are ready to predict on the testing data set. Since highest accuracy near 100 % was reached with random forest, we’ll use it to make the final prediction.</p>
+<pre class="r"><code>set.seed(1234)
+testpred&lt;-predict(model2, newdata=testing)</code></pre>
+</div>
 
 
 </div>
