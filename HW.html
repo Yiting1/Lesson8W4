@@ -16,7 +16,49 @@
 
 
 
-
+<pre class="r"><code>training&lt;-tbl_df(read.csv(&quot;pml-training.csv&quot;, na.strings = c(&quot;NA&quot;, &quot;&quot;)))
+testing&lt;-tbl_df(read.csv(&quot;pml-testing.csv&quot;, na.strings = c(&quot;NA&quot;, &quot;&quot;)))</code></pre>
+<p>The training dataset consists out of 19622 observations and 160 variables. In particular, it contains the variable <em>classe</em> consisting out of 5 factors <em>A</em> through <em>E</em>, which denote the type of exercise performed. We will use it as an outcome to train our prediction model. The testing data set contains 20 observations on 160 variables, for which we want to predict classe variable.</p>
+<p>Since the data contain a lot of empty columns as well as columns, which won’t have predicting power, we first clean the data from those variables. Doing so, our data frame is reduced to 53 variables.</p>
+<pre class="r"><code>training &lt;- training[, colSums(is.na(training)) == 0]
+testing &lt;- testing[, colSums(is.na(testing)) == 0]
+training &lt;- training[, -c(1:7)]
+testing &lt;- testing[, -c(1:7)]</code></pre>
+<p>In the next step, we split the training data set up into the actual training set and a cross validation set. Given the large number of observations, we are very safe to do so.</p>
+<pre class="r"><code>set.seed(1234)
+dp&lt;-createDataPartition(training$classe, p=0.7, list=FALSE)
+trn&lt;-training[dp,]
+val&lt;-training[-dp,]</code></pre>
+</div>
+<div id="building-models" class="section level1">
+<h1>Building models</h1>
+<div id="tree-model" class="section level2">
+<h2>Tree model</h2>
+<p>The first model we train on our data is a classification tree model.</p>
+<pre class="r"><code>set.seed(1234)
+model1&lt;-train(classe~.,method=&quot;rpart&quot;, data=trn)
+predv1&lt;-predict(model1, val)
+confv1&lt;-confusionMatrix(val$classe, predv1)
+confv1$overall[1]</code></pre>
+<pre><code>##  Accuracy 
+## 0.4890399</code></pre>
+<p>As we can see from the accuracy on the cross-validation set, performance of the tree model is relatively poor with an accuracy of 0.49. Using a simple tree model does not appear as the right solution to this data set. However, this appears reasonable given the large number of variables, rendering tree building a tricky business. It is already obvious that random forest will naturally do a better job on this data set, which we will see in the next step.</p>
+</div>
+<div id="random-forest" class="section level2">
+<h2>Random Forest</h2>
+<p>As the simple tree building algorithm did not do the best job in predicting, we now increase the model complexity and train a random forest model on the same data set.</p>
+<pre class="r"><code>set.seed(1234)
+model2&lt;-train(classe~.,method=&quot;rf&quot;, data=trn)
+predv2&lt;-predict(model2, val)
+confv2&lt;-confusionMatrix(val$classe, predv2)
+confv2$overall[1]</code></pre>
+<pre><code>##  Accuracy 
+## 0.9942226</code></pre>
+<pre class="r"><code>confv2&lt;-confusionMatrix(val$classe, predv2)
+confv2</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+  
+  
 <pre class="r"><code>confv2$overall[1]</code></pre>
 <pre><code>##  Accuracy 
 ## 0.9942226</code></pre>
