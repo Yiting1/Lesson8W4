@@ -15,6 +15,54 @@
 <title>Applied Machine Learning: Course Project</title>
 
 
+  
+  
+  
+  
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Applied Machine Learning: Course Project</h1>
+<h4 class="author"><em>Berthold Jaeck</em></h4>
+<h4 class="date"><em>7/1/2017</em></h4>
+
+</div>
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>Quantified self-movement is a group of fitness enthusiasts, which employs tracking devices in order to track their body motion during training exercices. With all these motion tracking data available, it poses an interesting question whether the actual exercise performed can be predicted based on these data. In this project, we employ data from the human activity recognition project (<a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a>) to test this idea.</p>
+</div>
+<div id="loading-data-and-libraries" class="section level1">
+<h1>Loading data and libraries</h1>
+<p>The training and testing data can be downloaded from the Coursera course website. Additionally, we load relevant libraries, especially the caret package for training prediction models and related model libraries.</p>
+<pre class="r"><code>library(caret)</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>library(randomForest)</code></pre>
+<pre><code>## randomForest 4.6-12</code></pre>
+<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>## 
+## Attaching package: 'randomForest'</code></pre>
+<pre><code>## The following object is masked from 'package:ggplot2':
+## 
+##     margin</code></pre>
+<pre class="r"><code>library(rpart)
+library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: 'dplyr'</code></pre>
+<pre><code>## The following object is masked from 'package:randomForest':
+## 
+##     combine</code></pre>
+<pre><code>## The following objects are masked from 'package:stats':
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from 'package:base':  
+  
+  
+  
+  
 
 <pre class="r"><code>training&lt;-tbl_df(read.csv(&quot;pml-training.csv&quot;, na.strings = c(&quot;NA&quot;, &quot;&quot;)))
 testing&lt;-tbl_df(read.csv(&quot;pml-testing.csv&quot;, na.strings = c(&quot;NA&quot;, &quot;&quot;)))</code></pre>
