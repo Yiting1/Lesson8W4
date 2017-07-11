@@ -9,11 +9,9 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="Berthold Jaeck" />
 
 
-<title>Applied Machine Learning: Course Project</title>
-
+<title>Prediction Assignment</title>
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -97,116 +95,95 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
-  
-  
-  
-  
+
+
+
+
+
+
 <div class="fluid-row" id="header">
 
 
 
-<h1 class="title toc-ignore">Applied Machine Learning: Course Project</h1>
-<h4 class="author"><em>Berthold Jaeck</em></h4>
-<h4 class="date"><em>7/1/2017</em></h4>
+<h1 class="title toc-ignore">Prediction Assignment</h1>
 
 </div>
 
 
-<div id="introduction" class="section level1">
-<h1>Introduction</h1>
-<p>Quantified self-movement is a group of fitness enthusiasts, which employs tracking devices in order to track their body motion during training exercices. With all these motion tracking data available, it poses an interesting question whether the actual exercise performed can be predicted based on these data. In this project, we employ data from the human activity recognition project (<a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a>) to test this idea.</p>
+<div id="getting-data" class="section level1">
+<h1>Getting data</h1>
+<p>The raw training data has 19622 rows of observations and 158 features (predictors). Column X is unusable row number. While the testing data has 20 rows and the same 158 features. There is one column of target outcome named classe.</p>
+<pre><code># URL of the training and testing data
+train.url =&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;
+test.url = &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;
+# file names
+train.name = &quot;./data/pml-training.csv&quot;
+test.name = &quot;./data/pml-testing.csv&quot;
+# if directory does not exist, create new
+if (!file.exists(&quot;./data&quot;)) {
+  dir.create(&quot;./data&quot;)
+}
+# if files does not exist, download the files
+if (!file.exists(train.name)) {
+  download.file(train.url, destfile=train.name, method=&quot;curl&quot;)
+}
+if (!file.exists(test.name)) {
+  download.file(test.url, destfile=test.name, method=&quot;curl&quot;)
+}
+# load the CSV files as data.frame 
+data &lt;- read.csv(&quot;D:/Users/ytwangzd/Desktop/pml-training.csv&quot;)
+test &lt;- read.csv(&quot;D:/Users/ytwangzd/Desktop/pml-testing.csv&quot;)
+</code></pre>
 </div>
-<div id="loading-data-and-libraries" class="section level1">
-<h1>Loading data and libraries</h1>
-<p>The training and testing data can be downloaded from the Coursera course website. Additionally, we load relevant libraries, especially the caret package for training prediction models and related model libraries.</p>
-<pre class="r"><code>library(caret)</code></pre>
-<pre><code>## Loading required package: lattice</code></pre>
-<pre><code>## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>library(randomForest)</code></pre>
-<pre><code>## randomForest 4.6-12</code></pre>
-<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre><code>## 
-## Attaching package: 'randomForest'</code></pre>
-<pre><code>## The following object is masked from 'package:ggplot2':
-## 
-##     margin</code></pre>
-<pre class="r"><code>library(rpart)
-library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: 'dplyr'</code></pre>
-<pre><code>## The following object is masked from 'package:randomForest':
-## 
-##     combine</code></pre>
-<pre><code>## The following objects are masked from 'package:stats':
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from 'package:base':  
-  
-  
-  
-  
+<div id="preprocessing" class="section level1">
+<h1>Preprocessing</h1>
+<p>Check for features? variance</p>
+<p>Based on the principal component analysis PCA, it is important that features have maximum variance for maximum uniqueness, so that each feature is as distant as possible (as orthogonal as possible) from the other features.</p>
+<pre><code># check for zero variance
+zero.var = nearZeroVar(train, saveMetrics=TRUE)
+zero.var</code></pre>
+<p>There is no features without variability (all has enough variance). So there is no feature to be removed further.</p>
+<p>Plot of relationship between features and outcome</p>
+<p>Plot the relationship between features and outcome. From the plot below, each features has relatively the same distribution among the 5 outcome levels (A, B, C, D, E).</p>
+<pre><code>featurePlot(train, outcome.org, &quot;strip&quot;)</code></pre>
+</div>
+<div id="plot-of-correlation-matrix" class="section level1">
+<h1>Plot of correlation matrix</h1>
+<p>Plot a correlation matrix between features. A good set of features is when they are highly uncorrelated (orthogonal) each others. The plot below shows average of correlation is not too high, so I choose to not perform further PCA preprocessing.</p>
+<pre><code>corrplot.mixed(cor(train), lower=&quot;circle&quot;, upper=&quot;color&quot;, 
+               tl.pos=&quot;lt&quot;, diag=&quot;n&quot;, order=&quot;hclust&quot;, hclust.method=&quot;complete&quot;)</code></pre>
+</div>
+<div id="fit-model-and-do-10-fold-cross-validation" class="section level1">
+<h1>Fit Model and Do 10-fold cross validation</h1>
+<pre><code>library(caret)
 
-<pre class="r"><code>training&lt;-tbl_df(read.csv(&quot;pml-training.csv&quot;, na.strings = c(&quot;NA&quot;, &quot;&quot;)))
-testing&lt;-tbl_df(read.csv(&quot;pml-testing.csv&quot;, na.strings = c(&quot;NA&quot;, &quot;&quot;)))</code></pre>
-<p>The training dataset consists out of 19622 observations and 160 variables. In particular, it contains the variable <em>classe</em> consisting out of 5 factors <em>A</em> through <em>E</em>, which denote the type of exercise performed. We will use it as an outcome to train our prediction model. The testing data set contains 20 observations on 160 variables, for which we want to predict classe variable.</p>
-<p>Since the data contain a lot of empty columns as well as columns, which won’t have predicting power, we first clean the data from those variables. Doing so, our data frame is reduced to 53 variables.</p>
-<pre class="r"><code>training &lt;- training[, colSums(is.na(training)) == 0]
-testing &lt;- testing[, colSums(is.na(testing)) == 0]
-training &lt;- training[, -c(1:7)]
-testing &lt;- testing[, -c(1:7)]</code></pre>
-<p>In the next step, we split the training data set up into the actual training set and a cross validation set. Given the large number of observations, we are very safe to do so.</p>
-<pre class="r"><code>set.seed(1234)
-dp&lt;-createDataPartition(training$classe, p=0.7, list=FALSE)
-trn&lt;-training[dp,]
-val&lt;-training[-dp,]</code></pre>
+fitControl &lt;- trainControl(
+  method = &quot;repeatedcv&quot;,
+  number = 10,
+  repeats = 3,
+  classProbs = TRUE
+)
+
+set.seed(1)
+nbfit &lt;- train(classe~., data = data,
+                method = &quot;nb&quot;,   
+                trControl = fitControl,
+                na.action = na.pass
+)</code></pre>
 </div>
-<div id="building-models" class="section level1">
-<h1>Building models</h1>
-<div id="tree-model" class="section level2">
-<h2>Tree model</h2>
-<p>The first model we train on our data is a classification tree model.</p>
-<pre class="r"><code>set.seed(1234)
-model1&lt;-train(classe~.,method=&quot;rpart&quot;, data=trn)
-predv1&lt;-predict(model1, val)
-confv1&lt;-confusionMatrix(val$classe, predv1)
-confv1$overall[1]</code></pre>
-<pre><code>##  Accuracy 
-## 0.4890399</code></pre>
-<p>As we can see from the accuracy on the cross-validation set, performance of the tree model is relatively poor with an accuracy of 0.49. Using a simple tree model does not appear as the right solution to this data set. However, this appears reasonable given the large number of variables, rendering tree building a tricky business. It is already obvious that random forest will naturally do a better job on this data set, which we will see in the next step.</p>
+<div id="prediction-and-do-confusionmatrix" class="section level1">
+<h1>Prediction and Do confusionMatrix</h1>
+<pre><code>pred &lt;- predict(nbfit,test,type=&quot;raw&quot;)
+confusionMatrix(pred,data$classe)</code></pre>
 </div>
-<div id="random-forest" class="section level2">
-<h2>Random Forest</h2>
-<p>As the simple tree building algorithm did not do the best job in predicting, we now increase the model complexity and train a random forest model on the same data set.</p>
-<pre class="r"><code>set.seed(1234)
-model2&lt;-train(classe~.,method=&quot;rf&quot;, data=trn)
-predv2&lt;-predict(model2, val)
-confv2&lt;-confusionMatrix(val$classe, predv2)
-confv2$overall[1]</code></pre>
-<pre><code>##  Accuracy 
-## 0.9942226</code></pre>
-<pre class="r"><code>confv2&lt;-confusionMatrix(val$classe, predv2)
-confv2</code></pre>
-<pre><code>## Confusion Matrix and Statistics
-  
-  
-<pre class="r"><code>confv2$overall[1]</code></pre>
-<pre><code>##  Accuracy 
-## 0.9942226</code></pre>
-<p>As can be seen, the model based on the random forest algorithm almost reaches 100 % prediction accuracy on the validation set, which is quite an impressive result. The estimated out of sample error follows to be 0.006 and may result from corrlations between the variables, that cannot be removed by the algorithm.</p>
-<p>While you may have a hard time finding a more accurate model than this one, the biggest drawback is its relatively long calculation time it takes.</p>
-</div>
-</div>
-<div id="predicting-on-the-data-set" class="section level1">
-<h1>Predicting on the data set</h1>
-<p>After having tried different algorithms to predict the classe variable, i.e. the type of work out performed, we are ready to predict on the testing data set. Since highest accuracy near 100 % was reached with random forest, we’ll use it to make the final prediction.</p>
-<pre class="r"><code>set.seed(1234)
-testpred&lt;-predict(model2, newdata=testing)</code></pre>
-</div>
+
+
 
 
 </div>
 
 <script>
+
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
   $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
@@ -214,6 +191,8 @@ function bootstrapStylePandocTables() {
 $(document).ready(function () {
   bootstrapStylePandocTables();
 });
+
+
 </script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
@@ -221,7 +200,7 @@ $(document).ready(function () {
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>
