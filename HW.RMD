@@ -1,33 +1,37 @@
 ---
-title: "Prediction Assignment"
+title: "W4HW"
 output: html_document
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
 #Getting data
 
 The raw training data has 19622 rows of observations and 158 features (predictors). Column X is unusable row number. While the testing data has 20 rows and the same 158 features. There is one column of target outcome named classe.
 
-```
-# URL of the training and testing data
-train.url ="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-test.url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+```{r,include=FALSE}
+# # URL of the training and testing data
+# train.url ="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+# test.url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 # file names
-train.name = "./data/pml-training.csv"
-test.name = "./data/pml-testing.csv"
-# if directory does not exist, create new
-if (!file.exists("./data")) {
-  dir.create("./data")
-}
-# if files does not exist, download the files
-if (!file.exists(train.name)) {
-  download.file(train.url, destfile=train.name, method="curl")
-}
-if (!file.exists(test.name)) {
-  download.file(test.url, destfile=test.name, method="curl")
-}
+#train.name = "C:/Users/yiting/Desktop/pml-training.csv"
+#test.name = "C:/Users/yiting/Desktop/pml-testing.csv"
+# # if directory does not exist, create new
+# if (!file.exists("./data")) {
+#   dir.create("./data")
+# }
+# # if files does not exist, download the files
+# if (!file.exists(train.name)) {
+#   download.file(train.url, destfile=train.name, method="curl")
+# }
+# if (!file.exists(test.name)) {
+#   download.file(test.url, destfile=test.name, method="curl")
+# }
 # load the CSV files as data.frame 
-data <- read.csv("D:/Users/ytwangzd/Desktop/pml-training.csv")
-test <- read.csv("D:/Users/ytwangzd/Desktop/pml-testing.csv")
+data <- read.csv("C:/Users/yiting/Desktop/pml-training.csv")
+test <- read.csv("C:/Users/yiting/Desktop/pml-testing.csv")
 
 ```
 #Preprocessing
@@ -36,38 +40,28 @@ Check for features's variance
 
 Based on the principal component analysis PCA, it is important that features have maximum variance for maximum uniqueness, so that each feature is as distant as possible (as orthogonal as possible) from the other features.
 
-```
-# check for zero variance
-zero.var = nearZeroVar(train, saveMetrics=TRUE)
-zero.var
-```
-
-There is no features without variability (all has enough variance). So there is no feature to be removed further.
+See its correlation.
 
 Plot of relationship between features and outcome
 
-Plot the relationship between features and outcome. From the plot below, each features has relatively the same distribution among the 5 outcome levels (A, B, C, D, E).
+```{r,include=T}
+library(dplyr)
+train <- data %>% select(roll_belt,pitch_belt,yaw_belt,
+                         gyros_belt_x,gyros_belt_y,gyros_arm_z)
 
+library(corrplot)
+M <- cor(train)
+corrplot(M, method="circle")
 ```
-featurePlot(train, outcome.org, "strip")
-```
-
-
-#Plot of correlation matrix
-
-Plot a correlation matrix between features.
-A good set of features is when they are highly uncorrelated (orthogonal) each others. The plot below shows average of correlation is not too high, so I choose to not perform further PCA preprocessing.
-
-```
-corrplot.mixed(cor(train), lower="circle", upper="color", 
-               tl.pos="lt", diag="n", order="hclust", hclust.method="complete")
-```
-
-
 #Fit Model and Do 10-fold cross validation
 
 ```
+library(ggplot2)
 library(caret)
+library(dplyr)
+
+train <- data %>% select(roll_belt,pitch_belt,yaw_belt,
+                         gyros_belt_x,gyros_belt_y,gyros_arm_z,classe)
 
 fitControl <- trainControl(
   method = "repeatedcv",
@@ -77,7 +71,7 @@ fitControl <- trainControl(
 )
 
 set.seed(1)
-nbfit <- train(classe~., data = data,
+nbfit <- train(classe~., data = train,
                 method = "nb",   
                 trControl = fitControl,
                 na.action = na.pass
@@ -87,8 +81,11 @@ nbfit <- train(classe~., data = data,
 #Prediction and Do confusionMatrix
 
 ```
-pred <- predict(nbfit,test,type="raw")
-confusionMatrix(pred,data$classe)
-```
+test <- test %>% select(roll_belt,pitch_belt,yaw_belt,
+                         gyros_belt_x,gyros_belt_y,gyros_arm_z)
 
+pred <- predict(nbfit,test,type="raw")
+confusionMatrix(pred,test$classe)
+
+```
 
