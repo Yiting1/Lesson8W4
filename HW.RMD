@@ -9,8 +9,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #Getting data
 
-The raw training data has 19622 rows of observations and 158 features (predictors). Column X is unusable row number. While the testing data has 20 rows and the same 158 features. There is one column of target outcome named classe.
-
 ```{r,include=FALSE}
 # load the CSV files as data.frame 
 data <- read.csv("C:/Users/yiting/Desktop/pml-training.csv")
