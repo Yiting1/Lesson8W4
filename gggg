@@ -1,3 +1,7 @@
+Data Analysis
+
+We download data to local for analysis
+
 training <- read.csv("D:/Users/ytwangzd/Desktop/pml-training.csv")
 testing <- read.csv("D:/Users/ytwangzd/Desktop/pml-testing.csv")
 
