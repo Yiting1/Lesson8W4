@@ -12,35 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 The raw training data has 19622 rows of observations and 158 features (predictors). Column X is unusable row number. While the testing data has 20 rows and the same 158 features. There is one column of target outcome named classe.
 
 ```{r,include=FALSE}
-# # URL of the training and testing data
-# train.url ="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-# test.url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
-# file names
-#train.name = "C:/Users/yiting/Desktop/pml-training.csv"
-#test.name = "C:/Users/yiting/Desktop/pml-testing.csv"
-# # if directory does not exist, create new
-# if (!file.exists("./data")) {
-#   dir.create("./data")
-# }
-# # if files does not exist, download the files
-# if (!file.exists(train.name)) {
-#   download.file(train.url, destfile=train.name, method="curl")
-# }
-# if (!file.exists(test.name)) {
-#   download.file(test.url, destfile=test.name, method="curl")
-# }
 # load the CSV files as data.frame 
 data <- read.csv("C:/Users/yiting/Desktop/pml-training.csv")
 test <- read.csv("C:/Users/yiting/Desktop/pml-testing.csv")
 
 ```
 #Preprocessing
-
-Check for features's variance
-
-Based on the principal component analysis PCA, it is important that features have maximum variance for maximum uniqueness, so that each feature is as distant as possible (as orthogonal as possible) from the other features.
-
-See its correlation.
 
 Plot of relationship between features and outcome
 
